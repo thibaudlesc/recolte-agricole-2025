@@ -7,6 +7,7 @@ import {
     signInWithEmailAndPassword, 
     onAuthStateChanged,
     signOut,
+    sendPasswordResetEmail,
     db,
     doc,
     setDoc
@@ -30,6 +31,7 @@ const signupContainer = document.getElementById('signup-form');
 // Liens pour basculer
 const showSignupLink = document.getElementById('show-signup');
 const showLoginLink = document.getElementById('show-login');
+const forgotPasswordLink = document.getElementById('forgot-password-link');
 
 // Messages d'erreur
 const signupError = document.getElementById('signup-error');
@@ -51,6 +53,38 @@ showLoginLink.addEventListener('click', (e) => {
     e.preventDefault();
     signupContainer.classList.add('hidden');
     loginContainer.classList.remove('hidden');
+});
+
+forgotPasswordLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const email = loginForm['login-email'].value;
+    
+    // Réinitialise le style et cache le message
+    loginError.classList.add('hidden');
+    loginError.classList.remove('text-green-600');
+    loginError.classList.add('text-red-500');
+
+    if (!email) {
+        loginError.textContent = "Veuillez saisir votre e-mail pour recevoir un lien de réinitialisation.";
+        loginError.classList.remove('hidden');
+        return;
+    }
+
+    try {
+        await sendPasswordResetEmail(auth, email);
+        // Affiche un message de succès en vert
+        loginError.textContent = "E-mail de réinitialisation envoyé ! Veuillez vérifier votre boîte de réception.";
+        loginError.classList.remove('text-red-500');
+        loginError.classList.add('text-green-600');
+        loginError.classList.remove('hidden');
+    } catch (error) {
+        console.error("Password reset error:", error);
+        // Affiche un message d'erreur en rouge
+        loginError.classList.remove('text-green-600');
+        loginError.classList.add('text-red-500');
+        loginError.textContent = "Erreur. L'e-mail est peut-être invalide ou n'existe pas.";
+        loginError.classList.remove('hidden');
+    }
 });
 
 
@@ -87,7 +121,10 @@ loginForm.addEventListener('submit', async (e) => {
     const email = loginForm['login-email'].value;
     const password = loginForm['login-password'].value;
     
+    // S'assure que le message d'erreur est caché et a le bon style au début
     loginError.classList.add('hidden');
+    loginError.classList.remove('text-green-600');
+    loginError.classList.add('text-red-500');
 
     try {
         await signInWithEmailAndPassword(auth, email, password);

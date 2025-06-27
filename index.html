@@ -36,7 +36,6 @@
 </head>
 <body class="antialiased text-gray-800">
 
-    <!-- Auth Screen -->
     <div id="auth-container" class="flex items-center justify-center min-h-screen bg-gray-50 px-4">
         <div class="w-full max-w-sm">
             <div class="flex justify-center mb-8">
@@ -52,7 +51,14 @@
                     <input type="password" id="login-password" required placeholder="Mot de passe" class="w-full p-3 bg-gray-100 border-2 border-transparent rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
                     <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-all duration-300 transform hover:scale-105">Se connecter</button>
                 </form>
-                <p class="text-center text-sm text-gray-600">Pas de compte ? <a href="#" id="show-signup" class="font-medium text-green-600 hover:underline">S'inscrire</a></p>
+                <div class="text-center text-sm">
+                    <p class="text-gray-600">
+                        <a href="#" id="forgot-password-link" class="font-medium text-green-600 hover:underline">Mot de passe oublié ?</a>
+                    </p>
+                    <p class="text-gray-600 mt-2">
+                        Pas de compte ? <a href="#" id="show-signup" class="font-medium text-green-600 hover:underline">S'inscrire</a>
+                    </p>
+                </div>
             </div>
             <div id="signup-form" class="bg-white p-6 rounded-2xl shadow-md space-y-6 hidden">
                 <h2 class="text-2xl font-bold text-center text-gray-800">Créer un compte</h2>
@@ -68,9 +74,7 @@
         </div>
     </div>
     
-    <!-- Main App Wrapper -->
     <div id="main-content" class="hidden relative">
-        <!-- Page: Field List -->
         <div id="page-field-list" class="pb-24">
             <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-10 p-4 border-b border-gray-200">
                 <h1 class="text-xl font-bold text-gray-800 text-center">Mes Parcelles</h1>
@@ -79,19 +83,16 @@
                 <div id="crop-filters-container" class="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 no-scrollbar"></div>
             </div>
             <div id="field-list-container" class="p-4 space-y-3">
-                <!-- Field cards will be injected here -->
-            </div>
+                </div>
         </div>
 
-        <!-- Page: Field Details -->
         <div id="page-field-details" class="hidden pb-24">
              <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-30 p-4 border-b border-gray-200 flex items-center">
                 <button id="back-to-list-btn" class="p-2 -ml-2 rounded-full hover:bg-gray-200">
                     <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
                 </button>
                 <h1 id="details-header-title" class="text-xl font-bold text-gray-800 text-center flex-grow">Détails</h1>
-                <div class="w-10"></div> <!-- Spacer -->
-            </header>
+                <div class="w-10"></div> </header>
             <div class="p-4 space-y-6">
                 <section id="field-info-cards" class="grid grid-cols-2 gap-3"></section>
                 <section id="trailers-list-container">
@@ -99,13 +100,11 @@
                     <div id="trailers-list" class="space-y-3"></div>
                 </section>
             </div>
-            <!-- Floating Action Button -->
             <button id="add-trailer-fab" class="fixed bottom-20 right-5 z-20 h-14 w-14 bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform">
                 <svg class="w-7 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
             </button>
         </div>
 
-        <!-- Bottom Navigation Bar -->
         <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-t border-gray-200 z-40 h-16 flex justify-around items-center">
             <button id="nav-fields" class="nav-btn p-2 text-green-600">
                 <svg class="w-7 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>
@@ -122,20 +121,16 @@
         </nav>
     </div>
 
-    <!-- Modal Sheets -->
     <div id="modal-container" class="hidden">
         <div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-40 z-40"></div>
         <div id="modal-content" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl p-4 pb-6 z-50">
-            <!-- Modal content injected here -->
-        </div>
+            </div>
     </div>
     
-    <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-800 text-white py-2 px-5 rounded-full shadow-lg hidden z-50">
         <p id="toast-message"></p>
     </div>
 
-    <!-- Scripts -->
     <script type="module" src="firebase-config.js"></script>
     <script type="module" src="app.js"></script>
     <script type="module" src="harvest.js"></script>
