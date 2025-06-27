@@ -2,259 +2,140 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Suivi de Récolte 2025</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Librairie pour la génération de fichiers Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; -webkit-tap-highlight-color: transparent; }
         .hidden { display: none; }
-        .modal-enter { animation: fadeIn 0.3s ease-out; }
-        .modal-leave { animation: fadeOut 0.3s ease-in forwards; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        @keyframes fadeOut {
-            from { opacity: 1; transform: scale(1); }
-            to { opacity: 0; transform: scale(0.95); }
-        }
-        .toast-enter { animation: slideInUp 0.4s ease-out; }
-        @keyframes slideInUp {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        /* Custom scrollbar for crop filters on mobile */
+        /* Page Transitions */
+        .page-enter { animation: page-in 0.3s ease-out forwards; }
+        .page-leave { animation: page-out 0.3s ease-out forwards; position: absolute; width: 100%; }
+        @keyframes page-in { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes page-out { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-20px); } }
+        /* Modal Animations */
+        .modal-enter .modal-content { animation: modal-content-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .modal-leave .modal-content { animation: modal-content-out 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .modal-enter .modal-backdrop { animation: modal-backdrop-in 0.3s ease-out forwards; }
+        .modal-leave .modal-backdrop { animation: modal-backdrop-out 0.3s ease-in forwards; }
+        @keyframes modal-content-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes modal-content-out { from { transform: translateY(0); } to { transform: translateY(100%); } }
+        @keyframes modal-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes modal-backdrop-out { from { opacity: 1; } to { opacity: 0; } }
+        /* Toast Animation */
+        .toast-enter { animation: toast-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes toast-in { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        /* Hide scrollbar */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="antialiased text-gray-800">
 
-    <!-- Conteneur d'authentification -->
+    <!-- Auth Screen -->
     <div id="auth-container" class="flex items-center justify-center min-h-screen bg-gray-50 px-4">
-        <div class="w-full max-w-md">
-            <!-- Logo -->
+        <div class="w-full max-w-sm">
             <div class="flex justify-center mb-8">
-                <svg class="w-16 h-16 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V6.375c0-.621.504-1.125 1.125-1.125h.375m18 0h-4.5M3.75 18h4.5m10.5 0h-4.5c-.414 0-.75-.336-.75-.75v-1.5c0-.414.336-.75.75-.75h4.5c.414 0 .75.336.75.75v1.5c0 .414-.336.75-.75.75z" />
+                 <svg class="w-16 h-16 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5l.415-.207a.75.75 0 011.085.67V10.5m0 0h6m-6 0a.75.75 0 00-1.085.67l-.416.207a.75.75 0 00-.67 1.085l.415.207a.75.75 0 001.085-.67V10.5m6 0a.75.75 0 00.67 1.085l.415-.207a.75.75 0 00-.67-1.085l-.415.207a.75.75 0 00-1.085.67V10.5m-9-3.75h9A.75.75 0 0121 7.5v9a.75.75 0 01-.75.75h-9A.75.75 0 013 16.5v-9A.75.75 0 013.75 6.75z" />
                 </svg>
             </div>
-            <!-- Formulaire de connexion -->
-            <div id="login-form" class="bg-white p-8 rounded-2xl shadow-lg space-y-6">
-                <h2 class="text-2xl font-bold text-center text-gray-800">Se connecter</h2>
+            <div id="login-form" class="bg-white p-6 rounded-2xl shadow-md space-y-6">
+                <h2 class="text-2xl font-bold text-center text-gray-800">Connexion</h2>
                 <p id="login-error" class="text-red-500 text-sm text-center hidden"></p>
                 <form id="login" class="space-y-4">
-                    <div>
-                        <label for="login-email" class="block text-sm font-medium text-gray-700">Adresse Mail</label>
-                        <input type="email" id="login-email" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
-                    </div>
-                    <div>
-                        <label for="login-password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
-                        <input type="password" id="login-password" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
-                    </div>
-                    <button type="submit" class="w-full mt-6 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-all duration-300 transform hover:scale-105">
-                        Connexion
-                    </button>
+                    <input type="email" id="login-email" required placeholder="Adresse Mail" class="w-full p-3 bg-gray-100 border-2 border-transparent rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
+                    <input type="password" id="login-password" required placeholder="Mot de passe" class="w-full p-3 bg-gray-100 border-2 border-transparent rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
+                    <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-all duration-300 transform hover:scale-105">Se connecter</button>
                 </form>
-                <p class="text-center text-sm text-gray-600">
-                    Pas encore de compte ? <a href="#" id="show-signup" class="font-medium text-green-600 hover:underline">S'inscrire</a>
-                </p>
+                <p class="text-center text-sm text-gray-600">Pas de compte ? <a href="#" id="show-signup" class="font-medium text-green-600 hover:underline">S'inscrire</a></p>
             </div>
-
-            <!-- Formulaire d'inscription -->
-            <div id="signup-form" class="bg-white p-8 rounded-2xl shadow-lg space-y-6 hidden">
+            <div id="signup-form" class="bg-white p-6 rounded-2xl shadow-md space-y-6 hidden">
                 <h2 class="text-2xl font-bold text-center text-gray-800">Créer un compte</h2>
                 <p id="signup-error" class="text-red-500 text-sm text-center hidden"></p>
                 <form id="signup" class="space-y-4">
-                    <div>
-                        <label for="signup-name" class="block text-sm font-medium text-gray-700">Prénom ou Nom</label>
-                        <input type="text" id="signup-name" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                    </div>
-                    <div>
-                        <label for="signup-email" class="block text-sm font-medium text-gray-700">Adresse Mail</label>
-                        <input type="email" id="signup-email" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                    </div>
-                    <div>
-                        <label for="signup-password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
-                        <input type="password" id="signup-password" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                    </div>
-                    <button type="submit" class="w-full mt-6 bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105">
-                        Créer le compte
-                    </button>
+                    <input type="text" id="signup-name" required placeholder="Prénom ou Nom" class="w-full p-3 bg-gray-100 border-2 border-transparent rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    <input type="email" id="signup-email" required placeholder="Adresse Mail" class="w-full p-3 bg-gray-100 border-2 border-transparent rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    <input type="password" id="signup-password" required placeholder="Mot de passe" class="w-full p-3 bg-gray-100 border-2 border-transparent rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-all">Créer le compte</button>
                 </form>
-                <p class="text-center text-sm text-gray-600">
-                    Déjà un compte ? <a href="#" id="show-login" class="font-medium text-blue-600 hover:underline">Se connecter</a>
-                </p>
+                <p class="text-center text-sm text-gray-600">Déjà un compte ? <a href="#" id="show-login" class="font-medium text-blue-600 hover:underline">Se connecter</a></p>
             </div>
         </div>
     </div>
     
-    <!-- Zone de contenu principal -->
-    <div id="main-content" class="hidden">
-        <header class="bg-white shadow-sm sticky top-0 z-40">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center py-4">
-                    <div class="flex items-center space-x-2">
-                         <svg class="w-8 h-8 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V6.375c0-.621.504-1.125 1.125-1.125h.375m18 0h-4.5M3.75 18h4.5m10.5 0h-4.5c-.414 0-.75-.336-.75-.75v-1.5c0-.414.336-.75.75-.75h4.5c.414 0 .75.336.75.75v1.5c0 .414-.336.75-.75.75z" />
-                        </svg>
-                        <h1 class="text-xl md:text-2xl font-bold text-gray-800">Récolte 2025</h1>
-                    </div>
-                    <button id="logout-btn" class="flex items-center px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V5h10a1 1 0 100-2H3zm12.293 4.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L16.586 13H9a1 1 0 110-2h7.586l-1.293-1.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
-                        <span class="hidden sm:inline">Déconnexion</span>
-                    </button>
-                </div>
+    <!-- Main App Wrapper -->
+    <div id="main-content" class="hidden relative">
+        <!-- Page: Field List -->
+        <div id="page-field-list" class="pb-24">
+            <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-10 p-4 border-b border-gray-200">
+                <h1 class="text-xl font-bold text-gray-800 text-center">Mes Parcelles</h1>
+            </header>
+            <div class="p-4">
+                <div id="crop-filters-container" class="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 no-scrollbar"></div>
             </div>
-        </header>
-
-        <div class="container mx-auto p-4 md:p-6 lg:p-8 max-w-7xl">
-            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm mb-8">
-                 <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Filtrer par culture :</label>
-                    <div class="relative">
-                        <div id="crop-filters-container" class="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
-                            <!-- Les boutons de filtre seront injectés ici -->
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div class="flex-grow">
-                        <label for="field-select" class="block text-sm font-medium text-gray-700 mb-2">Choisir une parcelle :</label>
-                        <select id="field-select" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"></select>
-                    </div>
-                    <div class="flex items-center gap-2 mt-4 sm:mt-0 pt-0 sm:pt-7">
-                        <button id="calculate-totals-btn" class="hidden w-full sm:w-auto px-4 py-3 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition-colors shadow flex items-center justify-center whitespace-nowrap">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg>
-                            Calculer
-                        </button>
-                        <button id="export-excel-btn" class="w-full sm:w-auto px-4 py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors shadow flex items-center justify-center whitespace-nowrap">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1 1 0 00-1 1v1a1 1 0 00-1 1H6a1 1 0 00-1 1v12a1 1 0 001 1h8a1 1 0 001-1V7a1 1 0 00-1-1h-1a1 1 0 00-1-1V4a1 1 0 00-1-1z" /><path d="M12 10.5a.5.5 0 01.5.5v3a.5.5 0 01-.5.5h-2a.5.5 0 01-.5-.5v-3a.5.5 0 01.5-.5h2z" /></svg>
-                            Exporter
-                        </button>
-                    </div>
-                </div>
+            <div id="field-list-container" class="p-4 space-y-3">
+                <!-- Field cards will be injected here -->
             </div>
+        </div>
 
-            <main id="field-data" class="space-y-8">
-                <section id="field-info" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></section>
-                <section id="trailers-section" class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-                        <h2 class="text-2xl font-semibold text-gray-700">Détail des Bennes</h2>
-                        <button id="add-trailer-btn" class="mt-4 md:mt-0 w-full md:w-auto bg-green-600 text-white font-bold py-2.5 px-5 rounded-lg hover:bg-green-700 transition-all duration-300 transform hover:scale-105 shadow flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                            Ajouter une benne
-                        </button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Poids Plein (kg)</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Poids Vide (kg)</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Poids Net (kg)</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="trailers-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                        </table>
-                    </div>
+        <!-- Page: Field Details -->
+        <div id="page-field-details" class="hidden pb-24">
+             <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-30 p-4 border-b border-gray-200 flex items-center">
+                <button id="back-to-list-btn" class="p-2 -ml-2 rounded-full hover:bg-gray-200">
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+                </button>
+                <h1 id="details-header-title" class="text-xl font-bold text-gray-800 text-center flex-grow">Détails</h1>
+                <div class="w-10"></div> <!-- Spacer -->
+            </header>
+            <div class="p-4 space-y-6">
+                <section id="field-info-cards" class="grid grid-cols-2 gap-3"></section>
+                <section id="trailers-list-container">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-2">Bennes</h2>
+                    <div id="trailers-list" class="space-y-3"></div>
                 </section>
-            </main>
+            </div>
+            <!-- Floating Action Button -->
+            <button id="add-trailer-fab" class="fixed bottom-20 right-5 z-20 h-14 w-14 bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform">
+                <svg class="w-7 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            </button>
         </div>
+
+        <!-- Bottom Navigation Bar -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-t border-gray-200 z-40 h-16 flex justify-around items-center">
+            <button id="nav-fields" class="nav-btn p-2 text-green-600">
+                <svg class="w-7 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>
+            </button>
+            <button id="nav-summary" class="nav-btn p-2 text-gray-500">
+                <svg class="w-7 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A2.625 2.625 0 011.5 18.375V17.25c0-1.01.84-1.838 1.875-1.875h.375zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+            </button>
+            <button id="nav-export" class="nav-btn p-2 text-gray-500">
+                <svg class="w-7 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+            </button>
+            <button id="logout-btn" class="nav-btn p-2 text-gray-500">
+                <svg class="w-7 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
+            </button>
+        </nav>
     </div>
 
-    <!-- MODALS -->
-    <div id="global-results-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
-        <div class="modal-content bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-2xl">
-            <h3 class="text-xl font-semibold mb-6 text-center text-gray-800">Résultats globaux</h3>
-            <div id="global-results-content" class="space-y-4 text-gray-700"></div>
-            <div class="mt-8 flex justify-end">
-                <button id="global-results-close-btn" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">Fermer</button>
-            </div>
+    <!-- Modal Sheets -->
+    <div id="modal-container" class="hidden">
+        <div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-40 z-40"></div>
+        <div id="modal-content" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl p-4 pb-6 z-50">
+            <!-- Modal content injected here -->
         </div>
     </div>
     
-    <div id="weight-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
-        <div class="modal-content bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md">
-            <h3 id="modal-title" class="text-xl font-semibold mb-6 text-center"></h3>
-            <input type="number" id="weight-input" class="w-full p-4 border border-gray-300 rounded-lg text-xl text-center focus:ring-2 focus:ring-green-500 transition" placeholder="0">
-            <p id="weight-modal-error" class="text-red-500 text-sm hidden text-center mt-2">Veuillez entrer un poids valide.</p>
-            <div class="mt-8 flex justify-end space-x-4">
-                <button id="modal-cancel-btn" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">Annuler</button>
-                <button id="modal-confirm-btn" class="px-6 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition">Valider</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="info-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
-        <div class="modal-content bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md">
-            <h3 class="text-xl font-semibold mb-6 text-center">Détails de la Benne</h3>
-            <div id="info-modal-content" class="space-y-4 text-gray-700"></div>
-            <div class="mt-8 flex justify-end">
-                <button id="info-modal-close-btn" class="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">Fermer</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="edit-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
-        <div class="modal-content bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md">
-            <h3 class="text-xl font-semibold mb-6 text-center">Modifier la pesée</h3>
-            <div class="space-y-4">
-                <div>
-                    <label for="edit-weight-full" class="block text-sm font-medium text-gray-700">Poids Plein (kg)</label>
-                    <input type="number" id="edit-weight-full" class="mt-1 w-full p-3 border border-gray-300 rounded-lg text-lg text-center">
-                </div>
-                <div>
-                    <label for="edit-weight-empty" class="block text-sm font-medium text-gray-700">Poids Vide (kg)</label>
-                    <input type="number" id="edit-weight-empty" class="mt-1 w-full p-3 border border-gray-300 rounded-lg text-lg text-center">
-                </div>
-                <p id="edit-modal-error" class="text-red-500 text-sm hidden text-center">Erreur de validation.</p>
-            </div>
-            <div class="mt-8 flex justify-end space-x-4">
-                <button id="edit-modal-cancel-btn" class="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">Annuler</button>
-                <button id="edit-modal-save-btn" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition">Enregistrer</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="confirmation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
-        <div class="modal-content bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md text-center">
-             <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-            </div>
-            <h3 class="text-lg font-medium text-gray-900 mt-5">Confirmer l'action</h3>
-            <div class="mt-2">
-                <p id="confirmation-message" class="text-sm text-gray-500">Êtes-vous sûr ?</p>
-            </div>
-            <div class="mt-6 flex justify-center space-x-4">
-                <button id="confirmation-cancel-btn" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition w-full sm:w-auto">Annuler</button>
-                <button id="confirmation-confirm-btn" class="px-6 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition w-full sm:w-auto">Confirmer</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast de notification -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white py-3 px-6 rounded-lg shadow-lg hidden z-50">
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-800 text-white py-2 px-5 rounded-full shadow-lg hidden z-50">
         <p id="toast-message"></p>
     </div>
 
-    <!-- Scripts Firebase & Application -->
+    <!-- Scripts -->
     <script type="module" src="firebase-config.js"></script>
     <script type="module" src="app.js"></script>
     <script type="module" src="harvest.js"></script>
