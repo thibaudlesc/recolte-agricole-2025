@@ -5,34 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suivi de Récolte 2025</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Librairie pour la génération de fichiers Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .hidden { display: none; }
+        .modal-enter { animation: fadeIn 0.3s ease-out; }
+        .modal-leave { animation: fadeOut 0.3s ease-in forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); }
+        }
+        .toast-enter { animation: slideInUp 0.4s ease-out; }
+        @keyframes slideInUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        /* Custom scrollbar for crop filters on mobile */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
-<body class="bg-gray-100 font-sans antialiased text-gray-800">
+<body class="antialiased text-gray-800">
 
-    <!-- Conteneur d'authentification (centré) -->
-    <div id="auth-container" class="flex items-center justify-center min-h-screen">
-        <div class="w-full max-w-md p-4">
+    <!-- Conteneur d'authentification -->
+    <div id="auth-container" class="flex items-center justify-center min-h-screen bg-gray-50 px-4">
+        <div class="w-full max-w-md">
+            <!-- Logo -->
+            <div class="flex justify-center mb-8">
+                <svg class="w-16 h-16 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V6.375c0-.621.504-1.125 1.125-1.125h.375m18 0h-4.5M3.75 18h4.5m10.5 0h-4.5c-.414 0-.75-.336-.75-.75v-1.5c0-.414.336-.75.75-.75h4.5c.414 0 .75.336.75.75v1.5c0 .414-.336.75-.75.75z" />
+                </svg>
+            </div>
             <!-- Formulaire de connexion -->
             <div id="login-form" class="bg-white p-8 rounded-2xl shadow-lg space-y-6">
                 <h2 class="text-2xl font-bold text-center text-gray-800">Se connecter</h2>
                 <p id="login-error" class="text-red-500 text-sm text-center hidden"></p>
-                <form id="login">
-                    <div class="space-y-4">
-                        <div>
-                            <label for="login-email" class="block text-sm font-medium text-gray-700">Adresse Mail</label>
-                            <input type="email" id="login-email" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
-                        </div>
-                        <div>
-                            <label for="login-password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
-                            <input type="password" id="login-password" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
-                        </div>
+                <form id="login" class="space-y-4">
+                    <div>
+                        <label for="login-email" class="block text-sm font-medium text-gray-700">Adresse Mail</label>
+                        <input type="email" id="login-email" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
                     </div>
-                    <button type="submit" class="w-full mt-6 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors duration-300">
+                    <div>
+                        <label for="login-password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                        <input type="password" id="login-password" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
+                    </div>
+                    <button type="submit" class="w-full mt-6 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-all duration-300 transform hover:scale-105">
                         Connexion
                     </button>
                 </form>
@@ -45,22 +73,20 @@
             <div id="signup-form" class="bg-white p-8 rounded-2xl shadow-lg space-y-6 hidden">
                 <h2 class="text-2xl font-bold text-center text-gray-800">Créer un compte</h2>
                 <p id="signup-error" class="text-red-500 text-sm text-center hidden"></p>
-                <form id="signup">
-                    <div class="space-y-4">
-                        <div>
-                            <label for="signup-name" class="block text-sm font-medium text-gray-700">Prénom ou Nom</label>
-                            <input type="text" id="signup-name" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        <div>
-                            <label for="signup-email" class="block text-sm font-medium text-gray-700">Adresse Mail</label>
-                            <input type="email" id="signup-email" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        <div>
-                            <label for="signup-password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
-                            <input type="password" id="signup-password" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        </div>
+                <form id="signup" class="space-y-4">
+                    <div>
+                        <label for="signup-name" class="block text-sm font-medium text-gray-700">Prénom ou Nom</label>
+                        <input type="text" id="signup-name" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                     </div>
-                    <button type="submit" class="w-full mt-6 bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-colors duration-300">
+                    <div>
+                        <label for="signup-email" class="block text-sm font-medium text-gray-700">Adresse Mail</label>
+                        <input type="email" id="signup-email" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                    <div>
+                        <label for="signup-password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                        <input type="password" id="signup-password" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                    <button type="submit" class="w-full mt-6 bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105">
                         Créer le compte
                     </button>
                 </form>
@@ -71,47 +97,62 @@
         </div>
     </div>
     
-    <!-- Zone de contenu principal (cachée par défaut) -->
+    <!-- Zone de contenu principal -->
     <div id="main-content" class="hidden">
-        <div class="container mx-auto p-4 md:p-8 max-w-6xl">
-            <header class="text-center mb-8 relative">
-                <h1 class="text-3xl md:text-4xl font-bold text-gray-700">Récolte Agricole 2025</h1>
-                <p class="text-gray-500 mt-2">Suivi des parcelles et des rendements</p>
-                <button id="logout-btn" class="absolute top-0 right-0 mt-2 mr-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold">Déconnexion</button>
-            </header>
+        <header class="bg-white shadow-sm sticky top-0 z-40">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-4">
+                    <div class="flex items-center space-x-2">
+                         <svg class="w-8 h-8 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V6.375c0-.621.504-1.125 1.125-1.125h.375m18 0h-4.5M3.75 18h4.5m10.5 0h-4.5c-.414 0-.75-.336-.75-.75v-1.5c0-.414.336-.75.75-.75h4.5c.414 0 .75.336.75.75v1.5c0 .414-.336.75-.75.75z" />
+                        </svg>
+                        <h1 class="text-xl md:text-2xl font-bold text-gray-800">Récolte 2025</h1>
+                    </div>
+                    <button id="logout-btn" class="flex items-center px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V5h10a1 1 0 100-2H3zm12.293 4.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L16.586 13H9a1 1 0 110-2h7.586l-1.293-1.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="hidden sm:inline">Déconnexion</span>
+                    </button>
+                </div>
+            </div>
+        </header>
 
-            <div class="mb-8">
-                <!-- Conteneur pour les filtres par culture et actions -->
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Filtrer par culture (sélection multiple possible) :</label>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <div id="crop-filters-container" class="flex flex-wrap gap-2">
+        <div class="container mx-auto p-4 md:p-6 lg:p-8 max-w-7xl">
+            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm mb-8">
+                 <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Filtrer par culture :</label>
+                    <div class="relative">
+                        <div id="crop-filters-container" class="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
                             <!-- Les boutons de filtre seront injectés ici -->
                         </div>
-                        <button id="calculate-totals-btn" class="hidden ml-4 px-4 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition-colors shadow flex items-center justify-center whitespace-nowrap">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7H17a1 1 0 110 2h-2.854l-1.213 5.761A1 1 0 0112 16H8a1 1 0 01-.967-.744L5.854 9H3a1 1 0 110-2h2.854l1.213-5.761A1 1 0 018 2h4z" clip-rule="evenodd" /></svg>
-                            Calculer le total
-                        </button>
-                        <button id="export-excel-btn" class="ml-2 px-4 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors shadow flex items-center justify-center whitespace-nowrap">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                            Télécharger (Excel)
-                        </button>
                     </div>
                 </div>
 
-                <label for="field-select" class="block text-sm font-medium text-gray-700 mb-2">Choisir une parcelle :</label>
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <select id="field-select" class="w-full p-3 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"></select>
-                    <!-- Le bouton "Créer un champ" a été supprimé -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex-grow">
+                        <label for="field-select" class="block text-sm font-medium text-gray-700 mb-2">Choisir une parcelle :</label>
+                        <select id="field-select" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"></select>
+                    </div>
+                    <div class="flex items-center gap-2 mt-4 sm:mt-0 pt-0 sm:pt-7">
+                        <button id="calculate-totals-btn" class="hidden w-full sm:w-auto px-4 py-3 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition-colors shadow flex items-center justify-center whitespace-nowrap">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg>
+                            Calculer
+                        </button>
+                        <button id="export-excel-btn" class="w-full sm:w-auto px-4 py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors shadow flex items-center justify-center whitespace-nowrap">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1 1 0 00-1 1v1a1 1 0 00-1 1H6a1 1 0 00-1 1v12a1 1 0 001 1h8a1 1 0 001-1V7a1 1 0 00-1-1h-1a1 1 0 00-1-1V4a1 1 0 00-1-1z" /><path d="M12 10.5a.5.5 0 01.5.5v3a.5.5 0 01-.5.5h-2a.5.5 0 01-.5-.5v-3a.5.5 0 01.5-.5h2z" /></svg>
+                            Exporter
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <main id="field-data" class="space-y-8">
-                <section id="field-info" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></section>
-                <section id="trailers-section" class="bg-white p-6 rounded-lg shadow-sm">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                <section id="field-info" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></section>
+                <section id="trailers-section" class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
                         <h2 class="text-2xl font-semibold text-gray-700">Détail des Bennes</h2>
-                        <button id="add-trailer-btn" class="mt-4 md:mt-0 w-full md:w-auto bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors shadow flex items-center justify-center">
+                        <button id="add-trailer-btn" class="mt-4 md:mt-0 w-full md:w-auto bg-green-600 text-white font-bold py-2.5 px-5 rounded-lg hover:bg-green-700 transition-all duration-300 transform hover:scale-105 shadow flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                             Ajouter une benne
                         </button>
@@ -137,22 +178,20 @@
     </div>
 
     <!-- MODALS -->
-    <div id="global-results-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
-        <div class="modal-content bg-white rounded-lg shadow-2xl p-8 w-full max-w-lg">
-            <h3 class="text-xl font-semibold mb-4 text-center">Résultats globaux</h3>
-            <div id="global-results-content" class="space-y-4 text-gray-700">
-                <!-- Contenu injecté par JavaScript -->
-            </div>
+    <div id="global-results-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-2xl">
+            <h3 class="text-xl font-semibold mb-6 text-center text-gray-800">Résultats globaux</h3>
+            <div id="global-results-content" class="space-y-4 text-gray-700"></div>
             <div class="mt-8 flex justify-end">
                 <button id="global-results-close-btn" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">Fermer</button>
             </div>
         </div>
     </div>
     
-    <div id="weight-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
-        <div class="modal-content bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
+    <div id="weight-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md">
             <h3 id="modal-title" class="text-xl font-semibold mb-6 text-center"></h3>
-            <input type="number" id="weight-input" class="w-full p-3 border border-gray-300 rounded-lg text-lg text-center" placeholder="0">
+            <input type="number" id="weight-input" class="w-full p-4 border border-gray-300 rounded-lg text-xl text-center focus:ring-2 focus:ring-green-500 transition" placeholder="0">
             <p id="weight-modal-error" class="text-red-500 text-sm hidden text-center mt-2">Veuillez entrer un poids valide.</p>
             <div class="mt-8 flex justify-end space-x-4">
                 <button id="modal-cancel-btn" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">Annuler</button>
@@ -161,10 +200,8 @@
         </div>
     </div>
 
-    <!-- Le modal de création de champ a été supprimé -->
-
-    <div id="info-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
-        <div class="modal-content bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
+    <div id="info-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md">
             <h3 class="text-xl font-semibold mb-6 text-center">Détails de la Benne</h3>
             <div id="info-modal-content" class="space-y-4 text-gray-700"></div>
             <div class="mt-8 flex justify-end">
@@ -172,8 +209,9 @@
             </div>
         </div>
     </div>
-    <div id="edit-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
-        <div class="modal-content bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
+
+    <div id="edit-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md">
             <h3 class="text-xl font-semibold mb-6 text-center">Modifier la pesée</h3>
             <div class="space-y-4">
                 <div>
@@ -192,19 +230,27 @@
             </div>
         </div>
     </div>
-    <div id="confirmation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
-        <div class="modal-content bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
-            <h3 class="text-xl font-semibold mb-2 text-center">Confirmer l'action</h3>
-            <p id="confirmation-message" class="text-center text-gray-600 mb-6">Êtes-vous sûr ? Cette action est irréversible.</p>
-            <div class="mt-8 flex justify-end space-x-4">
-                <button id="confirmation-cancel-btn" class="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">Annuler</button>
-                <button id="confirmation-confirm-btn" class="px-6 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition">Confirmer</button>
+
+    <div id="confirmation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md text-center">
+             <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mt-5">Confirmer l'action</h3>
+            <div class="mt-2">
+                <p id="confirmation-message" class="text-sm text-gray-500">Êtes-vous sûr ?</p>
+            </div>
+            <div class="mt-6 flex justify-center space-x-4">
+                <button id="confirmation-cancel-btn" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition w-full sm:w-auto">Annuler</button>
+                <button id="confirmation-confirm-btn" class="px-6 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition w-full sm:w-auto">Confirmer</button>
             </div>
         </div>
     </div>
 
     <!-- Toast de notification -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white py-3 px-6 rounded-lg shadow-lg hidden">
+    <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white py-3 px-6 rounded-lg shadow-lg hidden z-50">
         <p id="toast-message"></p>
     </div>
 
