@@ -102,10 +102,7 @@
                 <label for="field-select" class="block text-sm font-medium text-gray-700 mb-2">Choisir une parcelle :</label>
                 <div class="flex flex-col sm:flex-row gap-2">
                     <select id="field-select" class="w-full p-3 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"></select>
-                    <button id="create-field-btn" class="w-full sm:w-auto px-4 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors shadow flex items-center justify-center whitespace-nowrap">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
-                        Créer un champ
-                    </button>
+                    <!-- Le bouton "Créer un champ" a été supprimé -->
                 </div>
             </div>
 
@@ -163,21 +160,9 @@
             </div>
         </div>
     </div>
-    <div id="create-field-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
-        <div class="modal-content bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
-            <h3 class="text-xl font-semibold mb-6 text-center">Créer une nouvelle parcelle</h3>
-            <div class="space-y-4">
-                <input type="text" id="new-field-name" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Nom de la parcelle (Ex: Grand champ)">
-                <input type="text" id="new-field-crop" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Type de culture (Ex: BLÉ)">
-                <input type="number" id="new-field-size" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Surface en ha (Ex: 15.5)">
-                <p id="create-field-error" class="text-red-500 text-sm hidden text-center">Veuillez remplir tous les champs.</p>
-            </div>
-            <div class="mt-8 flex justify-end space-x-4">
-                <button id="create-field-cancel-btn" class="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">Annuler</button>
-                <button id="create-field-confirm-btn" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition">Créer</button>
-            </div>
-        </div>
-    </div>
+
+    <!-- Le modal de création de champ a été supprimé -->
+
     <div id="info-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
         <div class="modal-content bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
             <h3 class="text-xl font-semibold mb-6 text-center">Détails de la Benne</h3>

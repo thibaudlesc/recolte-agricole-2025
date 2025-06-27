@@ -5,7 +5,6 @@ import { doc, getDoc, setDoc, onSnapshot, collection, updateDoc } from "https://
 
 // --- SÉLECTION DES ÉLÉMENTS DU DOM ---
 const fieldSelect = document.getElementById('field-select');
-const createFieldBtn = document.getElementById('create-field-btn');
 const fieldInfoContainer = document.getElementById('field-info');
 const trailersTableBody = document.getElementById('trailers-table-body');
 const addTrailerBtn = document.getElementById('add-trailer-btn');
@@ -19,14 +18,6 @@ const weightInput = document.getElementById('weight-input');
 const weightModalError = document.getElementById('weight-modal-error');
 const modalCancelBtn = document.getElementById('modal-cancel-btn');
 const modalConfirmBtn = document.getElementById('modal-confirm-btn');
-
-const createFieldModal = document.getElementById('create-field-modal');
-const newFieldName = document.getElementById('new-field-name');
-const newFieldCrop = document.getElementById('new-field-crop');
-const newFieldSize = document.getElementById('new-field-size');
-const createFieldError = document.getElementById('create-field-error');
-const createFieldCancelBtn = document.getElementById('create-field-cancel-btn');
-const createFieldConfirmBtn = document.getElementById('create-field-confirm-btn');
 
 const infoModal = document.getElementById('info-modal');
 const infoModalContent = document.getElementById('info-modal-content');
@@ -178,7 +169,7 @@ function closeModal(modal) {
 }
 
 function showConfirmationModal(message, onConfirm) {
-    confirmationMessage.textContent = message;
+    confirmationMessage.innerHTML = message.replace(/\n/g, '<br>'); // Support line breaks
     onConfirmAction = onConfirm;
     openModal(confirmationModal);
 }
@@ -192,35 +183,26 @@ async function handleConfirmWeight() {
     }
     weightModalError.classList.add('hidden');
     
-    const trailerToUpdate = (weightModalMode === 'empty') ? harvestData[currentFieldKey].trailers[currentTrailerIndex] : null;
-    if (trailerToUpdate && weight >= trailerToUpdate.full) {
-        weightModalError.textContent = "Le poids à vide doit être inférieur au poids plein.";
-        weightModalError.classList.remove('hidden');
-        return;
+    // No over-validation for creation
+    const field = harvestData[currentFieldKey];
+    if (weightModalMode === 'full') {
+        field.trailers.push({ full: weight, empty: null, fullBy: currentUser.uid, fullAt: new Date(), emptyBy: null, emptyAt: null });
+        showToast('Benne pleine enregistrée.');
+    } else if (weightModalMode === 'empty') {
+        const trailer = field.trailers[currentTrailerIndex];
+        trailer.empty = weight;
+        trailer.emptyBy = currentUser.uid;
+        trailer.emptyAt = new Date();
+        showToast('Transport finalisé !');
     }
 
-    const action = async () => {
-        const field = harvestData[currentFieldKey];
-        if (weightModalMode === 'full') {
-            field.trailers.push({ full: weight, empty: null, fullBy: currentUser.uid, fullAt: new Date(), emptyBy: null, emptyAt: null });
-            showToast('Benne pleine enregistrée.');
-        } else if (weightModalMode === 'empty') {
-            const trailer = field.trailers[currentTrailerIndex];
-            trailer.empty = weight;
-            trailer.emptyBy = currentUser.uid;
-            trailer.emptyAt = new Date();
-            showToast('Transport finalisé !');
-        }
-        try {
-            await updateDoc(doc(db, 'fields', currentFieldKey), { trailers: field.trailers });
-        } catch (error) {
-            showToast("Erreur de synchronisation.");
-            console.error("Firestore update error:", error);
-        }
-    };
-
-    closeModal(weightModal);
-    showConfirmationModal("Êtes-vous sûr de vouloir valider ce poids ? L'action est irréversible.", action);
+    try {
+        await updateDoc(doc(db, 'fields', currentFieldKey), { trailers: field.trailers });
+        closeModal(weightModal);
+    } catch (error) {
+        showToast("Erreur de synchronisation.");
+        console.error("Firestore update error:", error);
+    }
 }
 
 function openEditModal(index) {
@@ -249,16 +231,28 @@ async function handleSaveEdit() {
         editModalError.classList.remove('hidden');
         return;
     }
+    // Over-validation re-established for modification
     if (newEmpty !== null && newEmpty >= newFull) {
         editModalError.textContent = "Le poids vide doit être inférieur au poids plein.";
         editModalError.classList.remove('hidden');
         return;
     }
     editModalError.classList.add('hidden');
+    
+    const field = harvestData[currentFieldKey];
+    const trailer = field.trailers[currentTrailerIndex];
+    const oldFull = trailer.full || 0;
+    const oldEmpty = trailer.empty;
+
+    let message = 'Confirmez-vous les modifications suivantes ?';
+    if (oldFull !== newFull) {
+        message += `\n- Poids Plein : <b>${oldFull.toLocaleString('fr-FR')} kg</b> → <b>${newFull.toLocaleString('fr-FR')} kg</b>`;
+    }
+    if (oldEmpty !== newEmpty && newEmpty !== null) {
+        message += `\n- Poids Vide : <b>${(oldEmpty || 0).toLocaleString('fr-FR')} kg</b> → <b>${newEmpty.toLocaleString('fr-FR')} kg</b>`;
+    }
 
     const action = async () => {
-        const field = harvestData[currentFieldKey];
-        const trailer = field.trailers[currentTrailerIndex];
         trailer.full = newFull;
         trailer.empty = newEmpty;
         trailer.editedBy = currentUser.uid;
@@ -273,10 +267,15 @@ async function handleSaveEdit() {
     };
 
     closeModal(editModal);
-    showConfirmationModal("Voulez-vous vraiment enregistrer ces modifications ? L'action est irréversible.", action);
+    showConfirmationModal(message, action);
 }
 
 function handleDeleteTrailer(index) {
+    const trailer = harvestData[currentFieldKey].trailers[index];
+    if (!trailer) return;
+
+    const message = `Êtes-vous sûr de vouloir supprimer la benne n°${index + 1} ? L'action est définitive.`;
+
     const action = async () => {
         const field = harvestData[currentFieldKey];
         field.trailers.splice(index, 1); 
@@ -289,7 +288,7 @@ function handleDeleteTrailer(index) {
         }
     };
 
-    showConfirmationModal("Êtes-vous sûr de vouloir supprimer cette ligne ? L'action est définitive.", action);
+    showConfirmationModal(message, action);
 }
 
 async function showTrailerInfo(index) {
@@ -378,40 +377,6 @@ function populateFieldSelect() {
     displayFieldData();
 }
 
-async function handleCreateField() {
-    const name = newFieldName.value.trim();
-    const crop = newFieldCrop.value.trim().toUpperCase();
-    const size = parseFloat(newFieldSize.value);
-    if (!name || !crop || isNaN(size) || size <= 0) {
-        createFieldError.textContent = "Veuillez remplir tous les champs correctement.";
-        createFieldError.classList.remove('hidden');
-        return;
-    }
-    createFieldError.classList.add('hidden');
-    const fieldDocRef = doc(db, 'fields', name);
-    const docSnap = await getDoc(fieldDocRef);
-    if (docSnap.exists()) {
-        createFieldError.textContent = "Une parcelle avec ce nom existe déjà.";
-        createFieldError.classList.remove('hidden');
-        return;
-    }
-    try {
-        await setDoc(fieldDocRef, { name, size, crop, trailers: [] });
-        closeModal(createFieldModal);
-        setTimeout(() => { 
-            selectedCrops = [crop];
-            populateFieldSelect();
-            fieldSelect.value = name; 
-            displayFieldData(); 
-        }, 300);
-        showToast(`La parcelle "${name}" a été créée.`);
-    } catch (error) {
-        createFieldError.textContent = "Erreur du serveur. Veuillez réessayer.";
-        createFieldError.classList.remove('hidden');
-        console.error("Field creation error:", error);
-    }
-}
-
 function showGlobalResults() {
     if (selectedCrops.length === 0) {
         showToast("Veuillez sélectionner au moins une culture.");
@@ -461,9 +426,8 @@ function exportToExcel() {
 
     // --- 1. Feuille de récapitulation ---
     const recapAOA = [
-        [{v: "Récapitulatif de la Récolte 2025", s: { font: { bold: true, sz: 16 }, alignment: { horizontal: "center" } } }], // Titre
-        [], // Ligne vide
-        // En-têtes du tableau
+        [{v: "Récapitulatif de la Récolte 2025", s: { font: { bold: true, sz: 16 }, alignment: { horizontal: "center" } } }],
+        [],
         [
             {v: "Parcelle", s: { font: { bold: true }, fill: { fgColor: { rgb: "D3D3D3" } } } },
             {v: "Culture", s: { font: { bold: true }, fill: { fgColor: { rgb: "D3D3D3" } } } },
@@ -490,7 +454,7 @@ function exportToExcel() {
         totalWeight += fieldWeight;
     });
 
-    recapAOA.push([]); // Ligne vide
+    recapAOA.push([]);
     recapAOA.push([
         {v: "TOTAL", s: { font: { bold: true }}},
         "",
@@ -500,7 +464,7 @@ function exportToExcel() {
     ]);
 
     const wsRecap = XLSX.utils.aoa_to_sheet(recapAOA);
-    wsRecap['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }]; // Fusionner la cellule de titre
+    wsRecap['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }];
     wsRecap['!cols'] = [ {wch: 25}, {wch: 15}, {wch: 15}, {wch: 18}, {wch: 20} ];
     XLSX.utils.book_append_sheet(wb, wsRecap, "Récapitulatif");
 
@@ -549,9 +513,9 @@ function setupEventListeners() {
             } else {
                 const index = selectedCrops.indexOf(crop);
                 if (index > -1) {
-                    selectedCrops.splice(index, 1); // Dé-sélectionne
+                    selectedCrops.splice(index, 1);
                 } else {
-                    selectedCrops.push(crop); // Sélectionne
+                    selectedCrops.push(crop);
                 }
             }
             updateActiveFilterButton();
@@ -600,8 +564,6 @@ function setupEventListeners() {
 
     modalCancelBtn.addEventListener('click', () => closeModal(weightModal));
     modalConfirmBtn.addEventListener('click', handleConfirmWeight);
-    createFieldCancelBtn.addEventListener('click', () => closeModal(createFieldModal));
-    createFieldConfirmBtn.addEventListener('click', handleCreateField);
     infoModalCloseBtn.addEventListener('click', () => closeModal(infoModal));
     editModalCancelBtn.addEventListener('click', () => closeModal(editModal));
     editModalSaveBtn.addEventListener('click', handleSaveEdit);
