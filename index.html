@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suivi de Récolte 2025</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Librairie pour la génération de fichiers Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body class="bg-gray-100 font-sans antialiased text-gray-800">
+
+    <!-- Conteneur d'authentification (centré) -->
+    <div id="auth-container" class="flex items-center justify-center min-h-screen">
+        <div class="w-full max-w-md p-4">
+            <!-- Formulaire de connexion -->
+            <div id="login-form" class="bg-white p-8 rounded-2xl shadow-lg space-y-6">
+                <h2 class="text-2xl font-bold text-center text-gray-800">Se connecter</h2>
+                <p id="login-error" class="text-red-500 text-sm text-center hidden"></p>
+                <form id="login">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="login-email" class="block text-sm font-medium text-gray-700">Adresse Mail</label>
+                            <input type="email" id="login-email" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        </div>
+                        <div>
+                            <label for="login-password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                            <input type="password" id="login-password" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full mt-6 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors duration-300">
+                        Connexion
+                    </button>
+                </form>
+                <p class="text-center text-sm text-gray-600">
+                    Pas encore de compte ? <a href="#" id="show-signup" class="font-medium text-green-600 hover:underline">S'inscrire</a>
+                </p>
+            </div>
+
+            <!-- Formulaire d'inscription -->
+            <div id="signup-form" class="bg-white p-8 rounded-2xl shadow-lg space-y-6 hidden">
+                <h2 class="text-2xl font-bold text-center text-gray-800">Créer un compte</h2>
+                <p id="signup-error" class="text-red-500 text-sm text-center hidden"></p>
+                <form id="signup">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="signup-name" class="block text-sm font-medium text-gray-700">Prénom ou Nom</label>
+                            <input type="text" id="signup-name" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="signup-email" class="block text-sm font-medium text-gray-700">Adresse Mail</label>
+                            <input type="email" id="signup-email" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="signup-password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                            <input type="password" id="signup-password" required class="mt-1 w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full mt-6 bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-colors duration-300">
+                        Créer le compte
+                    </button>
+                </form>
+                <p class="text-center text-sm text-gray-600">
+                    Déjà un compte ? <a href="#" id="show-login" class="font-medium text-blue-600 hover:underline">Se connecter</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Zone de contenu principal (cachée par défaut) -->
+    <div id="main-content" class="hidden">
+        <div class="container mx-auto p-4 md:p-8 max-w-6xl">
+            <header class="text-center mb-8 relative">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-700">Récolte Agricole 2025</h1>
+                <p class="text-gray-500 mt-2">Suivi des parcelles et des rendements</p>
+                <button id="logout-btn" class="absolute top-0 right-0 mt-2 mr-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold">Déconnexion</button>
+            </header>
+
+            <div class="mb-8">
+                <!-- Conteneur pour les filtres par culture et actions -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Filtrer par culture (sélection multiple possible) :</label>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div id="crop-filters-container" class="flex flex-wrap gap-2">
+                            <!-- Les boutons de filtre seront injectés ici -->
+                        </div>
+                        <button id="calculate-totals-btn" class="hidden ml-4 px-4 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition-colors shadow flex items-center justify-center whitespace-nowrap">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7H17a1 1 0 110 2h-2.854l-1.213 5.761A1 1 0 0112 16H8a1 1 0 01-.967-.744L5.854 9H3a1 1 0 110-2h2.854l1.213-5.761A1 1 0 018 2h4z" clip-rule="evenodd" /></svg>
+                            Calculer le total
+                        </button>
+                        <button id="export-excel-btn" class="ml-2 px-4 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors shadow flex items-center justify-center whitespace-nowrap">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                            Télécharger (Excel)
+                        </button>
+                    </div>
+                </div>
+
+                <label for="field-select" class="block text-sm font-medium text-gray-700 mb-2">Choisir une parcelle :</label>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <select id="field-select" class="w-full p-3 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"></select>
+                    <button id="create-field-btn" class="w-full sm:w-auto px-4 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors shadow flex items-center justify-center whitespace-nowrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
+                        Créer un champ
+                    </button>
+                </div>
+            </div>
+
+            <main id="field-data" class="space-y-8">
+                <section id="field-info" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></section>
+                <section id="trailers-section" class="bg-white p-6 rounded-lg shadow-sm">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                        <h2 class="text-2xl font-semibold text-gray-700">Détail des Bennes</h2>
+                        <button id="add-trailer-btn" class="mt-4 md:mt-0 w-full md:w-auto bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors shadow flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                            Ajouter une benne
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Poids Plein (kg)</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Poids Vide (kg)</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Poids Net (kg)</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trailers-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="global-results-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content bg-white rounded-lg shadow-2xl p-8 w-full max-w-lg">
+            <h3 class="text-xl font-semibold mb-4 text-center">Résultats globaux</h3>
+            <div id="global-results-content" class="space-y-4 text-gray-700">
+                <!-- Contenu injecté par JavaScript -->
+            </div>
+            <div class="mt-8 flex justify-end">
+                <button id="global-results-close-btn" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">Fermer</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="weight-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
+            <h3 id="modal-title" class="text-xl font-semibold mb-6 text-center"></h3>
+            <input type="number" id="weight-input" class="w-full p-3 border border-gray-300 rounded-lg text-lg text-center" placeholder="0">
+            <p id="weight-modal-error" class="text-red-500 text-sm hidden text-center mt-2">Veuillez entrer un poids valide.</p>
+            <div class="mt-8 flex justify-end space-x-4">
+                <button id="modal-cancel-btn" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">Annuler</button>
+                <button id="modal-confirm-btn" class="px-6 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition">Valider</button>
+            </div>
+        </div>
+    </div>
+    <div id="create-field-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
+            <h3 class="text-xl font-semibold mb-6 text-center">Créer une nouvelle parcelle</h3>
+            <div class="space-y-4">
+                <input type="text" id="new-field-name" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Nom de la parcelle (Ex: Grand champ)">
+                <input type="text" id="new-field-crop" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Type de culture (Ex: BLÉ)">
+                <input type="number" id="new-field-size" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Surface en ha (Ex: 15.5)">
+                <p id="create-field-error" class="text-red-500 text-sm hidden text-center">Veuillez remplir tous les champs.</p>
+            </div>
+            <div class="mt-8 flex justify-end space-x-4">
+                <button id="create-field-cancel-btn" class="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">Annuler</button>
+                <button id="create-field-confirm-btn" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition">Créer</button>
+            </div>
+        </div>
+    </div>
+    <div id="info-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
+            <h3 class="text-xl font-semibold mb-6 text-center">Détails de la Benne</h3>
+            <div id="info-modal-content" class="space-y-4 text-gray-700"></div>
+            <div class="mt-8 flex justify-end">
+                <button id="info-modal-close-btn" class="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">Fermer</button>
+            </div>
+        </div>
+    </div>
+    <div id="edit-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
+            <h3 class="text-xl font-semibold mb-6 text-center">Modifier la pesée</h3>
+            <div class="space-y-4">
+                <div>
+                    <label for="edit-weight-full" class="block text-sm font-medium text-gray-700">Poids Plein (kg)</label>
+                    <input type="number" id="edit-weight-full" class="mt-1 w-full p-3 border border-gray-300 rounded-lg text-lg text-center">
+                </div>
+                <div>
+                    <label for="edit-weight-empty" class="block text-sm font-medium text-gray-700">Poids Vide (kg)</label>
+                    <input type="number" id="edit-weight-empty" class="mt-1 w-full p-3 border border-gray-300 rounded-lg text-lg text-center">
+                </div>
+                <p id="edit-modal-error" class="text-red-500 text-sm hidden text-center">Erreur de validation.</p>
+            </div>
+            <div class="mt-8 flex justify-end space-x-4">
+                <button id="edit-modal-cancel-btn" class="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">Annuler</button>
+                <button id="edit-modal-save-btn" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+    <div id="confirmation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
+            <h3 class="text-xl font-semibold mb-2 text-center">Confirmer l'action</h3>
+            <p id="confirmation-message" class="text-center text-gray-600 mb-6">Êtes-vous sûr ? Cette action est irréversible.</p>
+            <div class="mt-8 flex justify-end space-x-4">
+                <button id="confirmation-cancel-btn" class="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">Annuler</button>
+                <button id="confirmation-confirm-btn" class="px-6 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast de notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white py-3 px-6 rounded-lg shadow-lg hidden">
+        <p id="toast-message"></p>
+    </div>
+
+    <!-- Scripts Firebase & Application -->
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="app.js"></script>
+    <script type="module" src="harvest.js"></script>
+</body>
+</html>
