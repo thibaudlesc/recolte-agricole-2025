@@ -4,7 +4,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 // Import all Firestore functions that will be used across the app
-import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, getDocs, writeBatch, addDoc, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // Your web app's Firebase configuration from your project
 const firebaseConfig = {
@@ -40,5 +40,8 @@ export {
     collection,
     onSnapshot,
     getDocs,
-    writeBatch
+    writeBatch,
+    addDoc,
+    query,
+    where
 };
